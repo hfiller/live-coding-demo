@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="/socket.io/socket.io.js"></script>
+		<script>
+		  var socket = io();
+		  socket.on('update', function(msg){
+		  	console.log(msg);
+		  });
+		  socket.on('id',function(){
+		  	console.log('HURRAY!');
+		  })
+		</script>
+		<script src="/jquery.min.js"></script>
+		<style type="text/css">
+			input {
+				width: 100%;
+				border:none;
+			}
+		</style>
+	</head>
+	<body>
+		<div id='test'>
+		</div>
+	</body>
+	<script type="text/javascript">
+	var parent = document.getElementById('test');
+	/*var jsKeywords = {
+      "if": A, "while": A, "with": A, "else": B, "do": B, "try": B, "finally": B,
+      "return": C, "break": C, "continue": C, "new": C, "delete": C, "throw": C,
+      "var": kw("var"), "const": kw("var"), "let": kw("var"),
+      "function": kw("function"), "catch": kw("catch"),
+      "for": kw("for"), "switch": kw("switch"), "case": kw("case"), "default": kw("default"),
+      "in": operator, "typeof": operator, "instanceof": operator,
+      "true": atom, "false": atom, "null": atom, "undefined": atom, "NaN": atom, "Infinity": atom
+    };*/
+    var terminChars = [';','{','}'];
+	function textManager(e){
+		var key = {
+			'letter' : e.which
+		}
+		console.log(key);
+		//special keys
+		var lastChar = this.value.slice(-1);
+		switch(key.letter){
+			case 38:{
+
+			}
+			case 13:{
+				//enter key
+				//new line
+				
+				console.log(lastChar);
+				if(this.value != '' && !(lastChar in terminChars)){
+					this.value +=';';
+					update(this);
+				}
+				newLine(this,event);
+				e.preventDefault();
+				break
+			}
+			case 16: {
+				//shift key. Display help?
+				break;
+			}
+			case 186: {
+				this.value += ';';
+				newLine(this,event);
+				update(this);
+				break;
+			}
+			case 219: {
+				if(lastChar = '{'){
+					//this.value += '{';
+					console.log('test');
+					newLine(this,event);
+					update(this);
+				}
+				break;
+			}
+			case 8: {
+				//backspace
+				if(this.value == ''){
+					removeLine(this,event);
+				} else {
+					update(this);
+				}
+				break;
+			}
+			default:{
+				update(this);
+			}
+		}
+		function update(item){
+			//if(!key.shift) key.letter += 32;
+			//var newKey = (key.letter > 32)?String.fromCharCode(key.letter):'';
+			socket.emit('update',($(item).index() + '_' + item.value));
+		}
+		
+	}
+	function removeLine(item){
+		if(item.parentNode.children[0] != item && item.parentNode.children[item.parentNode.children.length -1] != item){
+			socket.emit('removeLine',$(item).index());
+			$(item.parentNode.children[$(item).index()-1]).focus();
+			item.parentNode.removeChild(item);
+		}
+		event.preventDefault();
+	}
+	function newLine(item,event){
+		console.log($(item));
+		var newLineElement = document.createElement("input");
+		//newLineElement.class = "m";
+		if(typeof event != 'undefined') {
+			$(newLineElement).insertAfter($(item));
+			event.preventDefault();
+		} else {
+			parent.appendChild(newLineElement);
+		}
+		$(newLineElement).focusin(newFocus);
+		$(newLineElement).focus();
+		$(newLineElement).on('keyup change', textManager);
+		socket.emit('addLine',$(newLineElement).index());
+	}
+
+	function newFocus(){
+		console.log($(this).index())
+	}
+	function doNothing(e){
+		e.preventDefault();
+	}
+	$('form').on('submit',doNothing);
+	newLine();
+	</script>
+</html>

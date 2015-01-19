@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<script src="/three.min.js"></script>
+		<!--<script src="js/Projector.js"></script>
+		<script src="js/stats.min.js"></script>
+		<script src="js/CanvasRenderer.js"></script>-->
+		<script src="/socket.io/socket.io.js"></script>
+		<script type="text/javascript">
+			var socket = io();
+			var element, elementObject;
+			socket.on('update', function(msg){
+				console.log(msg.split("_",1)[0]);
+				elementObject.elementL.children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
+				elementObject.elementR.children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
+			});
+			socket.on('refresh_data',function(msg){
+				console.log(msg);
+				var obj = msg;
+				//var obj = JSON.parse(msg);
+				for(var i=0; i< obj.length; i++){
+					var newElement = document.createElement("div");
+					newElement.innerHTML += obj[i];
+					elementObject.elementL.appendChild(newElement);
+					elementObject.elementR.appendChild(newElement.cloneNode(true));
+					console.log(elementObject.toJSON());
+					//elementObject = new THREE.CSS3DObject( elementObject.elementL );
+				}
+			});
+			socket.on('removeLine',function(id){
+				console.log(id);
+			});
+			socket.on('addLine',function(id){
+				var newElement = document.createElement("div");
+				newElement.innerHTML = '_';
+				console.log(element.children);
+				elementObject.elementL.insertBefore(newElement,elementObject.elementL.children[id]);
+				elementObject.elementR.insertBefore(newElement.cloneNode(true),elementObject.elementR.children[id]);
+				console.log(scene);
+			});
+			console.log('test');
+			
+		</script>
+	</head>
+	<body id='body'>
+
+		<div id='container'></div>
+	</body>
+	<script src="js/tween.min.js"></script>
+		<script src="js/TrackballControls.js"></script>
+		<script src="js/CSS3DStereoRenderer.js"></script>
+
+		<script>
+
+			var camera, scene, renderer;
+			var controls;
+			
+			var state = 0;
+
+			var objects = [];
+			var targets = { table: [], sphere: [], helix: [], grid: [] };
+
+			init();
+			animate();
+
+			function init() {
+
+				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.z = 3000;
+
+				scene = new THREE.Scene();
+
+				element = document.createElement( 'div' );
+				element.className = 'element';
+				element.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
+				element.id = 'context';
+				elementObject = new THREE.CSS3DObject( element );
+				elementObject.position.x = 0;
+				elementObject.position.y = 0;
+				elementObject.position.z = 0;
+				scene.add(elementObject);
+
+
+				//console.log(elementObject.elementL.children[0].innerHTML);
+				//
+
+				renderer = new THREE.CSS3DStereoRenderer();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.domElement.style.position = 'absolute';
+				document.getElementById( 'container' ).appendChild( renderer.domElement );
+
+				//
+
+				controls = new THREE.TrackballControls( camera, renderer.domElement );
+				controls.rotateSpeed = 0.5;
+				controls.minDistance = 500;
+				controls.maxDistance = 6000;
+				controls.addEventListener( 'change', render );
+
+				//transform( targets.table, 5000 );
+
+
+				//
+
+				window.addEventListener( 'resize', onWindowResize, false );
+				
+				// reset instruction.
+				socket.emit('refresh','please');
+			}
+
+			//
+
+			var isFullscreen = false;
+
+			window.addEventListener( 'touchend', function () {
+
+				if ( isFullscreen === false ) {
+
+					document.body.webkitRequestFullscreen();
+
+					isFullscreen = true;
+
+				} else {
+				
+					document.webkitExitFullscreen();
+					
+					isFullscreen = false;
+				
+				}
+			
+			} );
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				render();
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				TWEEN.update();
+				//elementObject.elementL.children[0].innerHTML = new Date();
+				//elementObject.elementR.children[0].innerHTML = new Date();
+				elementObject.updateMatrixWorld();
+				//console.log(elementObject.elementL.children[0].innerHTML);
+				controls.update();
+
+			}
+
+			function render() {
+
+				renderer.render( scene, camera );
+
+			}
+		</script>
+</html>
