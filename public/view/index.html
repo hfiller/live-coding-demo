@@ -5,10 +5,12 @@
 		<!--<script src="js/Projector.js"></script>
 		<script src="js/stats.min.js"></script>
 		<script src="js/CanvasRenderer.js"></script>-->
+
 		<script src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript">
 			var socket = io();
 			var element, elementObject;
+			var lastFocused = {'update':false, 'index':1};
 			socket.on('update', function(msg){
 				console.log(msg.split("_",1)[0]);
 				elementObject.elementL.children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
@@ -27,6 +29,10 @@
 					//elementObject = new THREE.CSS3DObject( elementObject.elementL );
 				}
 			});
+			socket.on('focus',function(id){
+
+				elementObject.elementL.children[msg.split("_",1)[0]].innerHTML += '_';
+			})
 			socket.on('removeLine',function(id){
 				console.log(id);
 			});
@@ -47,6 +53,9 @@
 		<div id='container'></div>
 	</body>
 	<script src="js/tween.min.js"></script>
+		<script src="js/StereoEffect.js"></script>
+		<script src="js/OrbitControls.js"></script>
+		<script src="js/DeviceOrientationControls.js"></script>
 		<script src="js/TrackballControls.js"></script>
 		<script src="js/CSS3DStereoRenderer.js"></script>
 
@@ -64,9 +73,22 @@
 			animate();
 
 			function init() {
+				function setOrientationControls(e) {
+					if (!e.alpha) {
+						return;
+					}
 
+					controls = new THREE.DeviceOrientationControls(camera, true);
+					controls.connect();
+					controls.update();
+
+					element.addEventListener('click', fullscreen, false);
+
+					window.removeEventListener('deviceorientation', setOrientationControls, true);
+				}
+				window.addEventListener('deviceorientation', setOrientationControls, true);
 				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.z = 3000;
+				camera.position.z = 500;
 
 				scene = new THREE.Scene();
 
@@ -91,7 +113,7 @@
 
 				//
 
-				controls = new THREE.TrackballControls( camera, renderer.domElement );
+				controls = new THREE.OrbitControls( camera, renderer.domElement );
 				controls.rotateSpeed = 0.5;
 				controls.minDistance = 500;
 				controls.maxDistance = 6000;
@@ -146,14 +168,20 @@
 				requestAnimationFrame( animate );
 
 				TWEEN.update();
-				//elementObject.elementL.children[0].innerHTML = new Date();
-				//elementObject.elementR.children[0].innerHTML = new Date();
-				elementObject.updateMatrixWorld();
-				//console.log(elementObject.elementL.children[0].innerHTML);
 				controls.update();
 
 			}
-
+			function fullscreen() {
+			if (container.requestFullscreen) {
+				container.requestFullscreen();
+			} else if (container.msRequestFullscreen) {
+				container.msRequestFullscreen();
+			} else if (container.mozRequestFullScreen) {
+				container.mozRequestFullScreen();
+			} else if (container.webkitRequestFullscreen) {
+				container.webkitRequestFullscreen();
+			}
+			}
 			function render() {
 
 				renderer.render( scene, camera );

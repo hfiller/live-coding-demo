@@ -48,6 +48,10 @@ io.on('connection',function(socket){
   		console.log('message:' +"refresh");
   		socket.emit('refresh_data',text);
   	})
+
+    socket.on('focus',function(id){
+      io.emit('focus',id);
+    })
 });
 
 //start server using config sendFile

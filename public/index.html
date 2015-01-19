@@ -42,6 +42,9 @@
 		console.log(key);
 		//special keys
 		var lastChar = this.value.slice(-1);
+		console.log(lastChar);
+		console.log(terminChars.indexOf(lastChar));
+		console.log(-1 == terminChars.indexOf(lastChar));
 		switch(key.letter){
 			case 38:{
 
@@ -49,9 +52,8 @@
 			case 13:{
 				//enter key
 				//new line
-				
-				console.log(lastChar);
-				if(this.value != '' && !(lastChar in terminChars)){
+				if(this.value != '' && ( -1 == terminChars.indexOf(lastChar))) {
+					console.log("fuck");
 					this.value +=';';
 					update(this);
 				}
@@ -64,7 +66,6 @@
 				break;
 			}
 			case 186: {
-				this.value += ';';
 				newLine(this,event);
 				update(this);
 				break;
@@ -123,7 +124,8 @@
 	}
 
 	function newFocus(){
-		console.log($(this).index())
+		console.log($(this).index());
+		socket.emit('focus',$(this).index());
 	}
 	function doNothing(e){
 		e.preventDefault();
