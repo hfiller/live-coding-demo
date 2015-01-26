@@ -1,21 +1,34 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		 <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<script src="/three.min.js"></script>
 		<!--<script src="js/Projector.js"></script>
 		<script src="js/stats.min.js"></script>
 		<script src="js/CanvasRenderer.js"></script>-->
-
+		<style type="text/css">
+		#context {
+			width: 300px;
+			min-height: 200px;
+			border-radius: 8px 8px 8px 8px;
+			-moz-border-radius: 8px 8px 8px 8px;
+			-webkit-border-radius: 8px 8px 8px 8px;
+			border: 8px solid #000000;
+		}
+		</style>
 		<script src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript">
 			var socket = io();
-			var element, elementObject;
+			var otherelement, elementObject;
 			var lastFocused = {'update':false, 'index':1};
 			socket.on('update', function(msg){
 				console.log(msg.split("_",1)[0]);
 				elementObject.elementL.children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
 				elementObject.elementR.children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
 			});
+			socket.on('run',function(data){
+				eval(data);
+			})
 			socket.on('refresh_data',function(msg){
 				console.log(msg);
 				var obj = msg;
@@ -31,10 +44,12 @@
 			});
 			socket.on('focus',function(id){
 
-				elementObject.elementL.children[msg.split("_",1)[0]].innerHTML += '_';
+				//elementObject.elementL.children[id].innerHTML += '_';
 			})
 			socket.on('removeLine',function(id){
 				console.log(id);
+				elementObject.elementL.removeChild(elementObject.elementL.children[id]);
+				elementObject.elementR.removeChild(elementObject.elementR.children[id]);
 			});
 			socket.on('addLine',function(id){
 				var newElement = document.createElement("div");
@@ -60,7 +75,7 @@
 		<script src="js/CSS3DStereoRenderer.js"></script>
 
 		<script>
-
+/*
 			var camera, scene, renderer;
 			var controls;
 			
@@ -73,20 +88,7 @@
 			animate();
 
 			function init() {
-				function setOrientationControls(e) {
-					if (!e.alpha) {
-						return;
-					}
-
-					controls = new THREE.DeviceOrientationControls(camera, true);
-					controls.connect();
-					controls.update();
-
-					element.addEventListener('click', fullscreen, false);
-
-					window.removeEventListener('deviceorientation', setOrientationControls, true);
-				}
-				window.addEventListener('deviceorientation', setOrientationControls, true);
+				
 				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 10000 );
 				camera.position.z = 500;
 
@@ -94,7 +96,7 @@
 
 				element = document.createElement( 'div' );
 				element.className = 'element';
-				element.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
+				//element.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
 				element.id = 'context';
 				elementObject = new THREE.CSS3DObject( element );
 				elementObject.position.x = 0;
@@ -127,6 +129,20 @@
 				window.addEventListener( 'resize', onWindowResize, false );
 				
 				// reset instruction.
+				function setOrientationControls(e) {
+					if (!e.alpha) {
+						return;
+					}
+
+					controls = new THREE.DeviceOrientationControls(camera, true);
+					controls.connect();
+					controls.update();
+
+					//element.addEventListener('click', fullscreen, false);
+
+					window.removeEventListener('deviceorientation', setOrientationControls, true);
+				}
+				window.addEventListener('deviceorientation', setOrientationControls, true);
 				socket.emit('refresh','please');
 			}
 
@@ -134,7 +150,7 @@
 
 			var isFullscreen = false;
 
-			window.addEventListener( 'touchend', function () {
+			/*window.addEventListener( 'touchend', function () {
 
 				if ( isFullscreen === false ) {
 
@@ -181,11 +197,151 @@
 			} else if (container.webkitRequestFullscreen) {
 				container.webkitRequestFullscreen();
 			}
-			}
+			//}
 			function render() {
 
 				renderer.render( scene, camera );
 
-			}
+			}*/
+			var camera, scene, renderer;
+			var css3scene;
+    var effect, controls;
+    var element, container,planeMesh;
+
+    var clock = new THREE.Clock();
+
+    init();
+    animate();
+
+    function init() {
+      renderer = new THREE.WebGLRenderer();
+      element = renderer.domElement;
+      container = document.getElementById('container');
+      container.appendChild(element);
+      cssrenderer = new THREE.CSS3DStereoRenderer();
+	  cssrenderer.setSize( window.innerWidth, window.innerHeight );
+	  cssrenderer.domElement.style.position = 'absolute';
+	  document.getElementById( 'container' ).appendChild( cssrenderer.domElement );
+      effect = new THREE.StereoEffect(renderer);
+
+      scene = new THREE.Scene();
+      css3scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(90, 1, 0.001, 700);
+      camera.position.set(0, 10, 0);
+      scene.add(camera);
+
+      controls = new THREE.OrbitControls(camera, element);
+      controls.rotateUp(Math.PI / 4);
+      controls.target.set(
+        camera.position.x + 0.1,
+        camera.position.y,
+        camera.position.z
+      );
+      controls.noZoom = true;
+      controls.noPan = true;
+
+      function setOrientationControls(e) {
+        if (!e.alpha) {
+          return;
+        }
+
+        controls = new THREE.DeviceOrientationControls(camera, true);
+        controls.connect();
+        controls.update();
+        controls.noZoom = true;
+        element.addEventListener('click', fullscreen, false);
+
+        window.removeEventListener('deviceorientation', setOrientationControls, true);
+      }
+      window.addEventListener('deviceorientation', setOrientationControls, true);
+
+
+		// create the plane mesh
+		var othermaterial = new THREE.MeshBasicMaterial({
+		        color: 0xffffff,
+		        specular: 0xffffff,
+		        shininess: 20,
+		        shading: THREE.FlatShading
+		      });
+		var othergeometry = new THREE.PlaneGeometry( 40, 40);
+		planeMesh= new THREE.Mesh( othergeometry, othermaterial );
+		planeMesh.position.z = 40;
+		planeMesh.position.x = 40;
+		planeMesh.position.y = 40;
+		//planeMesh.rotation.x = -Math.PI / 2;
+		planeMesh.lookAt(camera.position);
+		// add it to the WebGL scene
+		scene.add(planeMesh);
+
+      var light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
+      scene.add(light);
+
+      var texture = THREE.ImageUtils.loadTexture(
+        '/checker.png'
+      );
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat = new THREE.Vector2(50, 50);
+      texture.anisotropy = renderer.getMaxAnisotropy();
+
+      var material = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        specular: 0xffffff,
+        shininess: 20,
+        shading: THREE.FlatShading,
+        map: texture
+      });
+
+      var geometry = new THREE.PlaneGeometry(1000, 1000);
+
+      var mesh = new THREE.Mesh(geometry, material);
+      mesh.rotation.x = -Math.PI / 2;
+      scene.add(mesh);
+
+      window.addEventListener('resize', resize, false);
+      setTimeout(resize, 1);
+    }
+
+    function resize() {
+      var width = container.offsetWidth;
+      var height = container.offsetHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(width, height);
+      effect.setSize(width, height);
+    }
+
+    function update(dt) {
+      resize();
+
+      camera.updateProjectionMatrix();
+
+      controls.update(dt);
+    }
+
+    function render(dt) {
+      effect.render(scene, camera);
+    }
+
+    function animate(t) {
+      requestAnimationFrame(animate);
+
+      update(clock.getDelta());
+      render(clock.getDelta());
+    }
+
+    function fullscreen() {
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
+      } else if (container.mozRequestFullScreen) {
+        container.mozRequestFullScreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      }
+    }
 		</script>
 </html>

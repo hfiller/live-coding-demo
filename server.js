@@ -51,6 +51,10 @@ io.on('connection',function(socket){
 
     socket.on('focus',function(id){
       io.emit('focus',id);
+    });
+    socket.on('compile',function(){
+
+      io.emit('run',text.join(' '));
     })
 });
 

@@ -50,6 +50,7 @@
 
 			}
 			case 13:{
+				//send command
 				//enter key
 				//new line
 				if(this.value != '' && ( -1 == terminChars.indexOf(lastChar))) {
@@ -63,6 +64,7 @@
 			}
 			case 16: {
 				//shift key. Display help?
+				socket.emit('compile');
 				break;
 			}
 			case 186: {
@@ -104,6 +106,8 @@
 			socket.emit('removeLine',$(item).index());
 			$(item.parentNode.children[$(item).index()-1]).focus();
 			item.parentNode.removeChild(item);
+		} else {
+			update(item);
 		}
 		event.preventDefault();
 	}

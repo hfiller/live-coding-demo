@@ -1,0 +1,145 @@
+<html>
+<head>
+	<style type="text/css">
+	#box {
+        border:1px solid blue;
+    }
+    .subcanvs {
+        border: 1px solid green;
+    }
+    </style>
+</head>
+
+<body>
+	<div id="box">
+    	<canvas id="boxCanvas" class="subcanvs"></canvas>
+    	<canvas id="ballCanvas" class="subcanvs"></canvas>
+	</div>
+</body>
+<script type="text/javascript">
+var w = window.innerWidth-20;
+var h = window.innerHeight-20;
+
+//====Shape Config ====//
+var circleRadius = 50;
+
+var circles = [];
+var selectedCircle = -1;
+
+var boxDiv = document.getElementById("box");
+boxDiv.style.width = w + "px";
+boxDiv.style.height = h + "px";
+boxDiv.style.position = "relative";
+
+var box = document.getElementById("boxCanvas");
+var boxCtx = box.getContext("2d");
+box.width = w;
+box.height = h;
+box.style.position = "absolute";
+box.style.left = 0;
+box.style.top = 0;
+
+var ball = document.getElementById("ballCanvas");
+var ballCtx = ball.getContext("2d");
+ball.width = w;
+ball.height = h;
+ball.style.position = "absolute";
+ball.style.left = 0;
+ball.style.top = 0;
+
+ball.addEventListener("mousedown", getPosition, false);
+
+function getMousePos(canvas, evt) {
+	var rect = canvas.getBoundingClientRect();
+	return {
+		x: evt.clientX - rect.left,
+		y: evt.clientY - rect.top
+	};
+}
+function getPosition(event)
+{
+	//check if inside circle
+	var mousePos = getMousePos(ball, event);
+	previousCircle = selectedCircle
+	selectedCircle = circleCheck(mousePos);
+	if(selectedCircle == -1){
+		var message = 'Mouse position: ' + mousePos.x + ',' + mousePos.y;
+	  	console.log(message);
+	  	ballCtx.beginPath();
+		ballCtx.arc(mousePos.x,mousePos.y,circleRadius,0,2*Math.PI);
+		ballCtx.fillStyle = 'white';
+		ballCtx.fill();
+		ballCtx.stroke();
+		selectedCircle = circles.length;
+		circles.push(mousePos);
+	} else {
+		//draw a line from selectedCircle to previousCircle
+		boxCtx.beginPath();
+		boxCtx.moveTo(circles[selectedCircle].x,circles[selectedCircle].y);
+		var avgX = Math.abs(circles[selectedCircle].x + circles[previousCircle].x)/2
+		var avgY = Math.abs(circles[selectedCircle].y + circles[previousCircle].y)/2
+		var angle =((circles[previousCircle].y - circles[selectedCircle].y) /( circles[previousCircle].x - circles[selectedCircle].x));
+
+		var distance = Math.sqrt((avgX*2)*(avgX*2)+(avgY*2)*(avgY*2));
+		boxCtx.quadraticCurveTo(avgX,avgY,circles[previousCircle].x,circles[previousCircle].y);
+		boxCtx.stroke();
+		boxCtx.beginPath();
+		var distance = 10;
+		var otherAngle = Math.abs(-1/angle);
+		var m = Math.sqrt((distance*distance)/(1+otherAngle))
+		//console.log((distance*distance)/(1+1/otherAngle))
+		//console.log(m);
+		var pointAx;
+		var pointAy;
+		var pointBx;
+		var pointBy;
+		var pointCx;
+		var pointCy;
+		var direction = 1;
+		
+		
+		
+		console.log(previousCircle + '-->' + selectedCircle + ': ' + direction);
+		//console.log(Math.sqrt(m*m + m * (-1/angle)*m * (-1/angle)));
+		if(Math.abs(Math.sqrt(m*m + m * (-1/angle)*m * (-1/angle))) - distance > distance/2){
+			console.log('error');
+			m = Math.sqrt((distance*distance)/(1+angle));
+			pointAx = avgX+angle * m;
+			pointAy = avgY -m;
+			pointBx = avgX-angle * m;
+			pointBy = avgY + m;
+			pointCx = avgX + direction * m;
+			pointCy = avgY + direction * m*(angle);
+			//boxCtx.moveTo(avgX+angle * m,avgY -m);
+			//boxCtx.lineTo(avgX-angle * m,avgY + m)
+		} else {
+			pointAx = avgX-m;
+			pointAy = avgY -m * (-1/angle);
+			pointBx = avgX+m;
+			pointBy = avgY + m*(-1/angle);
+			pointCx = avgX + direction * m*(1/angle);
+			pointCy = avgY + direction * m;
+			
+			//boxCtx.moveTo(avgX-m,avgY -m * (-1/angle));
+			//boxCtx.lineTo(avgX+m,avgY + m*(-1/angle));
+		}
+		boxCtx.moveTo(pointAx,pointAy);
+		boxCtx.lineTo(pointBx,pointBy);
+		boxCtx.lineTo(pointCx,pointCy);
+		boxCtx.lineTo(pointAx,pointAy);
+
+		console.log(Math.sqrt(Math.abs(pointBx - pointAx)*Math.abs(pointBx - pointAx)+ Math.abs(pointBy - pointAy)*Math.abs(pointBy - pointAy)));
+		boxCtx.stroke();
+	}
+}
+function circleCheck(pos){
+	for(var i=0; i< circles.length; i++){
+		if(pos.x - circles[i].x < 100 || pos.y - circles[i].y < 100){
+			if((pos.x - circles[i].x)*(pos.x - circles[i].x) + (pos.y - circles[i].y)*(pos.y - circles[i].y) < 10000){
+				return i;
+			}
+		}
+	}
+	return -1;
+}
+</script>
