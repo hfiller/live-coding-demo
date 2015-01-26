@@ -15,6 +15,9 @@
 			-webkit-border-radius: 8px 8px 8px 8px;
 			border: 8px solid #000000;
 		}
+		body {
+			background-color: #E6E6FA
+		}
 		</style>
 		<script src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript">
@@ -259,9 +262,10 @@
 		// create the plane mesh
 		var othermaterial = new THREE.MeshBasicMaterial({
 		        color: 0xffffff,
-		        specular: 0xffffff,
 		        shininess: 20,
-		        shading: THREE.FlatShading
+		        opacity: 0,
+		        shading: THREE.FlatShading,
+		        blending: THREE.NoBlending
 		      });
 		var othergeometry = new THREE.PlaneGeometry( 40, 40);
 		planeMesh= new THREE.Mesh( othergeometry, othermaterial );
@@ -322,7 +326,10 @@
     }
 
     function render(dt) {
-      effect.render(scene, camera);
+      // desktop version
+      renderer.render(scene, camera);
+      // immersive version
+      // effect.render(scene, camera);
     }
 
     function animate(t) {
