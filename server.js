@@ -18,6 +18,9 @@ app.get('/view',function(req,res){
 app.get('/js/:var',function(req,res){
   res.sendFile(__dirname + '/public/js/'+req.param('var'));
 })
+app.get('/js/:var/:var2',function(req,res){
+  res.sendFile(__dirname + '/public/js/'+req.param('var')+'/'+req.param('var2'));
+})
 var text = [];
 io.on('connection',function(socket){
 	activeUsers++;

@@ -8,12 +8,7 @@
 		<script src="js/CanvasRenderer.js"></script>-->
 		<style type="text/css">
 		#context {
-			width: 300px;
-			min-height: 200px;
-			border-radius: 8px 8px 8px 8px;
-			-moz-border-radius: 8px 8px 8px 8px;
-			-webkit-border-radius: 8px 8px 8px 8px;
-			border: 8px solid #000000;
+			border: 1px solid #FFFFFF;
 		}
 		body {
 			background-color: #E6E6FA
@@ -67,8 +62,10 @@
 		</script>
 	</head>
 	<body id='body'>
-
-		<div id='container'></div>
+		<div id='superContainer'> 
+			<div id='container' style='width:100%; height:100%;'></div>
+			<div id='othercontainer'></div>
+		</div>
 	</body>
 	<script src="js/tween.min.js"></script>
 		<script src="js/StereoEffect.js"></script>
@@ -218,22 +215,30 @@
 
     function init() {
       renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      renderer.domElement.style.position = 'absolute';
       element = renderer.domElement;
       container = document.getElementById('container');
+      otherContainer = document.getElementById('container');
       container.appendChild(element);
+      //otherContainer.appendChild(element)
       cssrenderer = new THREE.CSS3DStereoRenderer();
 	  cssrenderer.setSize( window.innerWidth, window.innerHeight );
 	  cssrenderer.domElement.style.position = 'absolute';
-	  document.getElementById( 'container' ).appendChild( cssrenderer.domElement );
+	  otherContainer.appendChild( cssrenderer.domElement );
+
       effect = new THREE.StereoEffect(renderer);
 
       scene = new THREE.Scene();
       css3scene = new THREE.Scene();
+
+
       camera = new THREE.PerspectiveCamera(90, 1, 0.001, 700);
       camera.position.set(0, 10, 0);
       scene.add(camera);
+      css3scene.add(camera);
 
-      controls = new THREE.OrbitControls(camera, element);
+      controls = new THREE.OrbitControls(camera, cssrenderer.domElement);
       controls.rotateUp(Math.PI / 4);
       controls.target.set(
         camera.position.x + 0.1,
@@ -257,7 +262,7 @@
         window.removeEventListener('deviceorientation', setOrientationControls, true);
       }
       window.addEventListener('deviceorientation', setOrientationControls, true);
-
+      window.addEventListener('click', fullscreen, false);
 
 		// create the plane mesh
 		var othermaterial = new THREE.MeshBasicMaterial({
@@ -275,7 +280,23 @@
 		//planeMesh.rotation.x = -Math.PI / 2;
 		planeMesh.lookAt(camera.position);
 		// add it to the WebGL scene
-		scene.add(planeMesh);
+		//scene.add(planeMesh);
+
+		tmpelement = document.createElement( 'span' );	
+		tmpelement.style.width = '200px';
+		tmpelement.style.height = '200px';
+		tmpelement.style.opacity = 1;
+		tmpelement.style.background = new THREE.Color( Math.random() * 0xffffff ).getStyle();
+		tmpelement.className = 'element';
+		element.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
+		tmpelement.id = 'context';
+		elementObject = new THREE.CSS3DObject( tmpelement );
+		elementObject.position.z = 200;
+		elementObject.position.x = 200;
+		elementObject.position.y = 200;
+		elementObject.lookAt(camera.position);
+		css3scene.add(elementObject);
+		
 
       var light = new THREE.HemisphereLight(0x777777, 0x000000, 0.6);
       scene.add(light);
@@ -301,7 +322,7 @@
       var mesh = new THREE.Mesh(geometry, material);
       mesh.rotation.x = -Math.PI / 2;
       scene.add(mesh);
-
+      fullscreen();
       window.addEventListener('resize', resize, false);
       setTimeout(resize, 1);
     }
@@ -309,16 +330,17 @@
     function resize() {
       var width = container.offsetWidth;
       var height = container.offsetHeight;
-
+      console.log(width);
+      console.log(height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
 
       renderer.setSize(width, height);
+      cssrenderer.setSize(width,height);
       effect.setSize(width, height);
     }
 
     function update(dt) {
-      resize();
 
       camera.updateProjectionMatrix();
 
@@ -327,9 +349,10 @@
 
     function render(dt) {
       // desktop version
-      renderer.render(scene, camera);
+      //renderer.render(scene, camera);
       // immersive version
-      // effect.render(scene, camera);
+      cssrenderer.render(css3scene,camera);
+      effect.render(scene, camera);
     }
 
     function animate(t) {
@@ -340,6 +363,7 @@
     }
 
     function fullscreen() {
+    	//var container = document.getElementById('superContainer');
       if (container.requestFullscreen) {
         container.requestFullscreen();
       } else if (container.msRequestFullscreen) {
