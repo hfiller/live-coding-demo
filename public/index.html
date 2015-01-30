@@ -64,7 +64,7 @@
 			}
 			case 16: {
 				//shift key. Display help?
-				socket.emit('compile');
+				if(event.metaKey)socket.emit('compile');
 				break;
 			}
 			case 186: {

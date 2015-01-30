@@ -19,43 +19,7 @@
 			var socket = io();
 			var otherelement, elementObject;
 			var lastFocused = {'update':false, 'index':1};
-			socket.on('update', function(msg){
-				console.log(msg.split("_",1)[0]);
-				elementObject.elementL.children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
-				elementObject.elementR.children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
-			});
 			
-			socket.on('refresh_data',function(msg){
-				console.log(msg);
-				var obj = msg;
-				//var obj = JSON.parse(msg);
-				for(var i=0; i< obj.length; i++){
-					var newElement = document.createElement("div");
-					newElement.innerHTML += obj[i];
-					elementObject.elementL.appendChild(newElement);
-					elementObject.elementR.appendChild(newElement.cloneNode(true));
-					console.log(elementObject.toJSON());
-					//elementObject = new THREE.CSS3DObject( elementObject.elementL );
-				}
-			});
-			socket.on('focus',function(id){
-
-				//elementObject.elementL.children[id].innerHTML += '_';
-			})
-			socket.on('removeLine',function(id){
-				console.log(id);
-				elementObject.elementL.removeChild(elementObject.elementL.children[id]);
-				elementObject.elementR.removeChild(elementObject.elementR.children[id]);
-			});
-			socket.on('addLine',function(id){
-				var newElement = document.createElement("div");
-				newElement.innerHTML = '_';
-				console.log(element.children);
-				elementObject.elementL.insertBefore(newElement,elementObject.elementL.children[id]);
-				elementObject.elementR.insertBefore(newElement.cloneNode(true),elementObject.elementR.children[id]);
-				console.log(scene);
-			});
-			console.log('test');
 			
 		</script>
 	</head>
@@ -65,18 +29,22 @@
 			<div id='othercontainer'></div>
 		</div>
 	</body>
-	<script src="js/tween.min.js"></script>
-		<script src="js/StereoEffect.js"></script>
-		<script src="js/OrbitControls.js"></script>
-		<script src="js/DeviceOrientationControls.js"></script>
-		<script src="js/TrackballControls.js"></script>
-		<script src="js/CSS3DStereoRenderer.js"></script>
+	<script src="/js/tween.min.js"></script>
+		<script src="/js/StereoEffect.js"></script>
+		<script src="/js/OrbitControls.js"></script>
+		<script src="/js/DeviceOrientationControls.js"></script>
+		<script src="/js/TrackballControls.js"></script>
+		<script src="/js/CSS3DStereoRenderer.js"></script>
 		<script type="text/javascript">
 			function interiorCode(){
 				try{
-					<%- message %>
+					eval("<%= message %>");
 				} catch(err){
 					console.log(err);
+					var errorMessage = document.createElement('div');
+					errorMessage.innerHTML = err;
+					elementObject.elementL.appendChild(errorMessage);
+					elementObject.elementR.appendChild(errorMessage.cloneNode(true));
 				}
 			}
 		</script>
@@ -213,7 +181,6 @@
 			var css3scene;
     var effect, controls;
 	    var element, container,planeMesh;
-	    var elementObject;
     var clock = new THREE.Clock();
 
     init();
@@ -224,7 +191,7 @@
 				
     			// base url
     			console.log(data);
-				var url = "http://104.131.88.222:6113/view/";    
+				var url = "http://localhost:6113/view/";    
 				url += data;
 				window.location.href = url;
 
@@ -297,16 +264,22 @@
 		planeMesh.lookAt(camera.position);
 		// add it to the WebGL scene
 		//scene.add(planeMesh);
-
+		var masterElement = document.createElement('div');
 		tmpelement = document.createElement( 'span' );	
 		tmpelement.style.width = '200px';
 		tmpelement.style.height = '200px';
+		tmpelement.style.overflow = 'scroll';
 		tmpelement.style.opacity = 1;
 		tmpelement.style.background = new THREE.Color( Math.random() * 0xffffff ).getStyle();
 		tmpelement.className = 'element';
+		masterElement.style.width = '200px';
+		masterElement.style.height = '200px';
+		masterElement.style.opacity = 1;
+		masterElement.style.background = new THREE.Color( Math.random() * 0xffffff ).getStyle();
+		masterElement.appendChild(tmpelement);
 		element.style.backgroundColor = 'rgba(0,127,127,' + ( Math.random() * 0.5 + 0.25 ) + ')';
 		tmpelement.id = 'context';
-		elementObject = new THREE.CSS3DObject( tmpelement );
+		elementObject = new THREE.CSS3DObject( masterElement );
 		elementObject.position.z = 200;
 		elementObject.position.x = -200;
 		elementObject.position.y = 0;
@@ -342,6 +315,7 @@
       fullscreen();
       window.addEventListener('resize', resize, false);
       setTimeout(resize, 1);
+      socket.emit('refresh','please');
       interiorCode();
     }
 
@@ -389,5 +363,43 @@
         container.webkitRequestFullscreen();
       }
     }
+
+    socket.on('update', function(msg){
+				console.log(msg.split("_",1)[0]);
+				elementObject.elementL.children[0].children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
+				elementObject.elementR.children[0].children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
+			});
+			
+			socket.on('refresh_data',function(msg){
+				console.log(msg);
+				var obj = msg;
+				//var obj = JSON.parse(msg);
+				for(var i=0; i< obj.length; i++){
+					var newElement = document.createElement("div");
+					newElement.innerHTML += obj[i];
+					elementObject.elementL.children[0].appendChild(newElement);
+					elementObject.elementR.children[0].appendChild(newElement.cloneNode(true));
+					console.log(elementObject.toJSON());
+					//elementObject = new THREE.CSS3DObject( elementObject.elementL.children[0] );
+				}
+			});
+			socket.on('focus',function(id){
+
+				//elementObject.elementL.children[0].children[id].innerHTML += '_';
+			})
+			socket.on('removeLine',function(id){
+				console.log(id);
+				elementObject.elementL.children[0].removeChild(elementObject.elementL.children[0].children[id]);
+				elementObject.elementR.children[0].removeChild(elementObject.elementR.children[0].children[id]);
+			});
+			socket.on('addLine',function(id){
+				var newElement = document.createElement("div");
+				newElement.innerHTML = '_';
+				console.log(element.children);
+				elementObject.elementL.children[0].insertBefore(newElement,elementObject.elementL.children[0].children[id]);
+				elementObject.elementR.children[0].insertBefore(newElement.cloneNode(true),elementObject.elementR.children[0].children[id]);
+				console.log(scene);
+			});
+			console.log('test');
 		</script>
 </html>

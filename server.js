@@ -16,11 +16,15 @@ app.get('/:var',function(req,res){
 	res.sendFile(__dirname + '/public/'+req.param('var'));
 });
 app.get('/view',function(req,res){
-	res.render(__dirname + '/public/view/index.ejs');
+	res.render(__dirname + '/public/view/index.ejs',{message:''});
 });
 app.get('/view/:var',function(req,res){
-  codeIterations[req.param('var')];
-  res.render(__dirname + '/public/view/index.ejs', {message: text.join(' ')});
+  if( typeof codeIterations[req.param('var')] == 'undefined'){
+    res.render(__dirname + '/public/view/index.ejs',{message:''});
+  } else {
+    codeIterations[req.param('var')];
+    res.render(__dirname + '/public/view/index.ejs', {message: text.join(' ') } );
+  }
 });
 app.get('/js/:var',function(req,res){
   res.sendFile(__dirname + '/public/js/'+req.param('var'));
