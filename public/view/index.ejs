@@ -24,9 +24,7 @@
 				elementObject.elementL.children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
 				elementObject.elementR.children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);
 			});
-			socket.on('run',function(data){
-				eval(data);
-			})
+			
 			socket.on('refresh_data',function(msg){
 				console.log(msg);
 				var obj = msg;
@@ -73,7 +71,15 @@
 		<script src="js/DeviceOrientationControls.js"></script>
 		<script src="js/TrackballControls.js"></script>
 		<script src="js/CSS3DStereoRenderer.js"></script>
-
+		<script type="text/javascript">
+			function interiorCode(){
+				try{
+					<%- message %>
+				} catch(err){
+					console.log(err);
+				}
+			}
+		</script>
 		<script>
 /*
 			var camera, scene, renderer;
@@ -206,13 +212,23 @@
 			var camera, scene, renderer;
 			var css3scene;
     var effect, controls;
-    var element, container,planeMesh;
-
+	    var element, container,planeMesh;
+	    var elementObject;
     var clock = new THREE.Clock();
 
     init();
     animate();
 
+
+    socket.on('run',function(data){
+				
+    			// base url
+    			console.log(data);
+				var url = "http://104.131.88.222:6113/view/";    
+				url += data;
+				window.location.href = url;
+
+			});
     function init() {
       renderer = new THREE.WebGLRenderer();
       renderer.setSize( window.innerWidth, window.innerHeight );
@@ -292,8 +308,8 @@
 		tmpelement.id = 'context';
 		elementObject = new THREE.CSS3DObject( tmpelement );
 		elementObject.position.z = 200;
-		elementObject.position.x = 200;
-		elementObject.position.y = 200;
+		elementObject.position.x = -200;
+		elementObject.position.y = 0;
 		elementObject.lookAt(camera.position);
 		css3scene.add(elementObject);
 		
@@ -320,18 +336,18 @@
       var geometry = new THREE.PlaneGeometry(1000, 1000);
 
       var mesh = new THREE.Mesh(geometry, material);
+
       mesh.rotation.x = -Math.PI / 2;
       scene.add(mesh);
       fullscreen();
       window.addEventListener('resize', resize, false);
       setTimeout(resize, 1);
+      interiorCode();
     }
 
     function resize() {
       var width = container.offsetWidth;
       var height = container.offsetHeight;
-      console.log(width);
-      console.log(height);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
 
@@ -341,23 +357,22 @@
     }
 
     function update(dt) {
-
-      camera.updateProjectionMatrix();
-
-      controls.update(dt);
+    	resize();
+    	camera.updateProjectionMatrix();
+    	controls.update(dt);
     }
 
     function render(dt) {
       // desktop version
-      //renderer.render(scene, camera);
+      // renderer.render(scene, camera);
       // immersive version
+      // midrenderer.render(midscene,camera);
       cssrenderer.render(css3scene,camera);
       effect.render(scene, camera);
     }
 
     function animate(t) {
       requestAnimationFrame(animate);
-
       update(clock.getDelta());
       render(clock.getDelta());
     }

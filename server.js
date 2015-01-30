@@ -4,8 +4,11 @@ var io = require('socket.io')(http);
 var path = require('path'); 
 var fs = require('fs');
 var activeUsers = 0;
+var ejs = require('ejs');
 var port = 6113;
 
+var codeId = 1;
+var codeIterations = {};
 app.get('/',function(req,res){
 	res.sendFile(__dirname + '/public/index.html');
 });
@@ -13,8 +16,12 @@ app.get('/:var',function(req,res){
 	res.sendFile(__dirname + '/public/'+req.param('var'));
 });
 app.get('/view',function(req,res){
-	res.sendFile(__dirname + '/public/view/index.html');
-})
+	res.render(__dirname + '/public/view/index.ejs');
+});
+app.get('/view/:var',function(req,res){
+  codeIterations[req.param('var')];
+  res.render(__dirname + '/public/view/index.ejs', {message: text.join(' ')});
+});
 app.get('/js/:var',function(req,res){
   res.sendFile(__dirname + '/public/js/'+req.param('var'));
 })
@@ -56,8 +63,9 @@ io.on('connection',function(socket){
       io.emit('focus',id);
     });
     socket.on('compile',function(){
-
-      io.emit('run',text.join(' '));
+      codeIterations[codeId] = text.join(' ');
+      io.emit('run',codeId);
+      codeId++;
     })
 });
 
