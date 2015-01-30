@@ -16,6 +16,7 @@
 		</style>
 		<script src="/socket.io/socket.io.js"></script>
 		<script type="text/javascript">
+		window.scrollTo(0,1);
 			var socket = io();
 			var otherelement, elementObject;
 			var lastFocused = {'update':false, 'index':1};
@@ -241,12 +242,10 @@
         controls.update();
         controls.noZoom = true;
         element.addEventListener('click', fullscreen, false);
-
         window.removeEventListener('deviceorientation', setOrientationControls, true);
       }
       window.addEventListener('deviceorientation', setOrientationControls, true);
       window.addEventListener('click', fullscreen, false);
-
 		// create the plane mesh
 		var othermaterial = new THREE.MeshBasicMaterial({
 		        color: 0xffffff,
@@ -312,7 +311,6 @@
 
       mesh.rotation.x = -Math.PI / 2;
       scene.add(mesh);
-      fullscreen();
       window.addEventListener('resize', resize, false);
       setTimeout(resize, 1);
       socket.emit('refresh','please');
@@ -362,8 +360,10 @@
       } else if (container.webkitRequestFullscreen) {
         container.webkitRequestFullscreen();
       }
+      //window.location.href = 'http://localhost:6113/view/3';
+    	console.log('test');
     }
-
+    fullscreen();
     socket.on('update', function(msg){
 				console.log(msg.split("_",1)[0]);
 				elementObject.elementL.children[0].children[msg.split("_",1)[0]].innerHTML = msg.slice(msg.indexOf('_') + 1);

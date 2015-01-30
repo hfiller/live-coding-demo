@@ -16,6 +16,9 @@ app.get('/:var',function(req,res){
 	res.sendFile(__dirname + '/public/'+req.param('var'));
 });
 app.get('/view',function(req,res){
+  res.sendFile(__dirname + '/public/view.html');
+});
+app.get('/view/',function(req,res){
 	res.render(__dirname + '/public/view/index.ejs',{message:''});
 });
 app.get('/view/:var',function(req,res){
